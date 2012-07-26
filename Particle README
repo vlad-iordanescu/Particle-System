@@ -1,0 +1,42 @@
+The basic command line for the program is this:
+
+For point movement:
+===================
+
+./Particle (type of point movement) (number of particles) (start point x coord) (start point y coord) (color red) (color green) (color blue) (lifetime) (speed) (size) (color transition and next color) (speed effect) (length if necessary)
+
+Ex.
+
+./Particle point 1000 10 10 255 255 255 100 0.5 0.1 NULL NULL
+./Particle point_r 1000 25 25 0 0 0 1000 0.3 0.2 colortrans 255 255 255 accel 10
+
+Color transition:
+
+-NULL for no color transition
+-"random" for random color transition
+-"colortrans" and 3 numbers for specific color transition
+
+Speed effect:
+-"accel" for acceleration
+-"decel" for deceleration
+
+Length is for point_r and point_rd (ripple effect and ripple effect with reversion)
+
+Types of movement: point, point_r, point_rd
+
+For liniar movement:
+====================
+
+./Particle liniar (type of point movement) (number of particles) (first x coord) (first y coord) (second x coord)...etc (color red) (color green) (color blue) (lifetime) (speed) (size) (color transition and next color) (speed effect)
+
+You can assign an indefinite number of coordonates for a specific trajectory.
+The rest is like in the point movement
+
+For global movement:
+====================
+./Particle liniar (type of point movement) (number of particles) (first x coord) (first y coord) (second x coord) (second y coord) (color red) (color green) (color blue) (lifetime) (speed) (size) (color transition and next color) (speed effect)
+
+The coordonates are to point that are diagonal opposed corners for a rectangle
+The first coordonates are the lower point.
+
+Types of movement: random, random_blk, random_rain

@@ -81,3 +81,68 @@ int global::setUpdateRain() {
     }
     return 0;
 }
+
+int global::setRandomColor() {
+    srand (time(NULL));
+    for (int i = 0; i < m_count; i++) {
+        if (rand() % 2 == 1 && m_particles[i].m_red < 255)
+            m_particles[i].m_red += 1;
+        else if (rand() % 2 == 1 && m_particles[i].m_red == 255)
+            m_particles[i].m_red -= 1;
+        else if (rand() % 2 == 0 && m_particles[i].m_red > 0)
+            m_particles[i].m_red -= 1;
+        else
+            m_particles[i].m_red += 1;
+        if (rand() % 2 == 1 && m_particles[i].m_green < 255)
+            m_particles[i].m_green += 1;
+        else if (rand() % 2 == 1 && m_particles[i].m_green == 255)
+            m_particles[i].m_green -= 1;
+        else if (rand() % 2 == 0 && m_particles[i].m_green > 0)
+            m_particles[i].m_green -= 1;
+        else
+            m_particles[i].m_green += 1;
+        if (rand() % 2 == 1 && m_particles[i].m_blue < 255)
+            m_particles[i].m_blue += 1;
+        else if (rand() % 2 == 1 && m_particles[i].m_blue == 255)
+            m_particles[i].m_blue -= 1;
+        else if (rand() % 2 == 0 && m_particles[i].m_blue > 0)
+            m_particles[i].m_blue -= 1;
+        else
+            m_particles[i].m_blue += 1;
+    }
+    return 0;
+}
+
+int global::setTransitionColor(char red, char green, char blue) {
+    for (int i = 0; i < m_count; i++) {
+    if (m_particles[i].m_red < red)
+        m_particles[i].m_red += 1;
+    else if (m_particles[i].m_red > red)
+        m_particles[i].m_red -= 1;
+    if (m_particles[i].m_green < green)
+        m_particles[i].m_green += 1;
+    else if (m_particles[i].m_green > green)
+        m_particles[i].m_green -= 1;
+    if (m_particles[i].m_blue < blue)
+        m_particles[i].m_blue += 1;
+    else if (m_particles[i].m_blue > blue)
+        m_particles[i].m_blue -= 1;
+    if (m_particles[i].m_red == red && m_particles[i].m_green == green && m_particles[i].m_blue == blue)
+        return 1;
+    }
+    return 0;
+}
+
+int global::setAccel(float m_aux) {
+    for (int i = 0; i < m_count; i++) {
+        m_particles[i].m_speed += m_aux;
+    }
+    return 0;
+}
+
+int global::setDecel(float m_aux) {
+    for (int i = 0; i < m_count; i++) {
+        m_particles[i].m_speed -= m_aux;
+    }
+    return 0;
+}

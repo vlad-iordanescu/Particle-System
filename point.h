@@ -1,4 +1,5 @@
-#include "particle.h"
+//#include "particle.h"
+#include"liniar.h"
 class point {
     public:
     point(int number, float x, float y, char red, char green, char blue, float lifetime, float speed, float size);
@@ -12,8 +13,8 @@ class point {
     int setAccel(float m_aux);
     int setDecel(float m_aux);
     particles *m_particles;
-    private:
     int m_count;
+    private:
     float m_xstart;
     float m_ystart;
 };
