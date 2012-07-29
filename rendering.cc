@@ -1,10 +1,13 @@
 #include<iostream>
 #include<string.h>
 #include"point.h"
-using namespace std;
+
 #include<GL/glut.h>
 #include<GL/gl.h>
 #include<GL/glu.h>
+
+using namespace std;
+
 bool m_RndClr = false;
 bool m_TrClr = false;
 bool m_Accel = false;
