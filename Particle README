@@ -40,3 +40,18 @@ The coordonates are to point that are diagonal opposed corners for a rectangle
 The first coordonates are the lower point.
 
 Types of movement: random, random_blk, random_rain
+
+
+DEMO
+=====
+
+./Particle mouse 200000 50 0 0 255 100 0.05 0.01 NULL accel
+./Particle mouse 200000 100 0 255 0 100 0.005 1 NULL accel
+./Particle random_rain 2000 100 200 800 900 255 0 0 900 0.2 2 NULL NULL
+./Particle liniar 10000 600 200 300 400 800 800 100 300 900 500 100 100 255 0 0 400 0.005 3 NULL NULL
+./Particle point_rd 200000 500 500 0 255 0 400 0.05 1 NULL NULL 4
+./Particle point_r 200000 500 500 255 0 0 400 0.05 1 NULL NULL 4
+./Particle point 200000 500 500 0 255 0 400 0.5 1 NULL NULL
+./Particle random 100000 200 200 800 800 0 255 0 400 0.5 0.5 NULL NULL
+
+

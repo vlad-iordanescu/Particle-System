@@ -5,7 +5,7 @@ PROGRAM = Particle
  
 
 build:
-	$(CC) -o $(PROGRAM) $(SRC) point.cc liniar.cc global.cc $(CCFLAGS)
+	$(CC) -o $(PROGRAM) $(SRC) point.cc liniar.cc global.cc mouse.cc $(CCFLAGS) -lGL -lGLU -lglut -lm
  
 run:
 	./$(PROGRAM)

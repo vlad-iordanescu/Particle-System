@@ -1,8 +1,14 @@
 #include "point.h"
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
-point::point(int number, float x, float y, char red, char green, char blue, float lifetime, float speed, float size) {
+
+point::point() { }
+ 
+point::~point() { }
+
+int point::setParticle(int number, float x, float y, float red, float green, float blue, float lifetime, float speed, float size) {
     m_particles = new particles[number];
     m_count = number;
     m_xstart = x;
@@ -14,18 +20,14 @@ point::point(int number, float x, float y, char red, char green, char blue, floa
         m_particles[i].m_lifetime = lifetime;
         m_particles[i].m_size = size;
         m_particles[i].m_speed = speed;
-        m_particles[i].m_xangle = 0;
-        m_particles[i].m_yangle = 0;
+        m_particles[i].m_xangle = 1;
+        m_particles[i].m_yangle = 1;
     }
-}
- 
-point::~point() { }
-
-int point::setParticle() {
     for(int i = 0; i < m_count; i++) {
         m_particles[i].m_xpos = m_xstart;
         m_particles[i].m_ypos = m_ystart;
     }
+    m_start = 1;
     return 0;
 }
 
@@ -33,20 +35,27 @@ int point::setPointMultipleUpdate() {
     srand (time(NULL));
     for (int i = 0; i < m_count; i++) {
         if (m_particles[i].m_xpos == m_xstart && m_particles[i].m_ypos == m_ystart) {
-            m_particles[i].m_xangle = (rand() % 100) / 1000;
-            m_particles[i].m_yangle = (rand() % 100) / 1000;
-            if (rand() % 2 == 1)
-                m_particles[i].m_xangle = m_particles[i].m_xangle * -1;
-            if (rand() % 2 == 1)
-                m_particles[i].m_yangle = m_particles[i].m_yangle * -1;
+
+            m_particles[i].m_xangle = ((rand() % 1000) - 500) / 10;
+            rand();
+            m_particles[i].m_yangle = ((rand() % 1000) - 500) / 10;
+            rand();
+            if (m_particles[i].m_xangle == 0)
+                m_particles[i].m_xangle++;
+            else if (m_particles[i].m_yangle == 0)
+                m_particles[i].m_yangle++;
+            m_particles[i].m_xpos += m_particles[i].m_xangle * m_particles[i].m_speed * (rand()%10);
+            rand();
+            m_particles[i].m_ypos += m_particles[i].m_yangle * m_particles[i].m_speed * (rand()%10);
         }
-        else if (m_particles[i].m_xpos > m_particles[i].m_lifetime || m_particles[i].m_ypos > m_particles[i].m_lifetime) {
-            m_particles[i].m_xpos = 0;
-            m_particles[i].m_ypos = 0;
+        else if (sqrt((m_xstart - m_particles[i].m_xpos) * (m_xstart - m_particles[i].m_xpos) + (m_ystart - m_particles[i].m_ypos) * (m_ystart - m_particles[i].m_ypos)) > m_particles[0].m_lifetime) {
+            m_particles[i].m_xpos = m_xstart;
+            m_particles[i].m_ypos = m_ystart;
         }
         else {
-            m_particles[i].m_xpos += m_particles[i].m_xangle * m_particles[i].m_speed * (rand() % 100) / 10000;
-            m_particles[i].m_ypos += m_particles[i].m_yangle * m_particles[i].m_speed * (rand() % 100) / 10000;
+            m_particles[i].m_xpos += m_particles[i].m_xangle * m_particles[i].m_speed * ((rand()%100)/100 + 0.1);
+            rand();
+            m_particles[i].m_ypos += m_particles[i].m_yangle * m_particles[i].m_speed * ((rand()%100)/100 + 0.1);
         }
     }
     return 0;
@@ -55,21 +64,39 @@ int point::setPointMultipleUpdate() {
 int point::setPointOneUpdate(int m_length) { 
     srand (time(NULL));
     for (int i = 0; i < m_count; i++) {
-        if (m_particles[i].m_xpos == m_xstart && m_particles[i].m_ypos == m_ystart) {
-            m_particles[i].m_xangle = (rand() % 100) / 1000;
-            m_particles[i].m_yangle = (rand() % 100) / 1000;
-            if (rand() % 2 == 1)
-                m_particles[i].m_xangle = m_particles[i].m_xangle * -1;
-            if (rand() % 2 == 1)
-                m_particles[i].m_yangle = m_particles[i].m_yangle * -1;
-            m_particles[i].m_xpos += m_particles[i].m_xangle * m_particles[i].m_speed * (rand() % m_length);
-            m_particles[i].m_ypos += m_particles[i].m_yangle * m_particles[i].m_speed * (rand() % m_length);
+        if (m_particles[i].m_xpos == m_xstart && m_particles[i].m_ypos == m_ystart && m_start == 1) {
+            m_particles[i].m_xangle = ((rand() % 1000) - 500) / 10;
+            rand();
+            m_particles[i].m_yangle = ((rand() % 1000) - 500) / 10;
+            rand();
+            
+                if (i < m_count / 4) 
+                     m_particles[i].m_xangle = -50;
+                
+                else if (i < m_count / 2) 
+                     m_particles[i].m_xangle = 50;
+                
+                else if (i < (3 * m_count) / 4) 
+                     m_particles[i].m_yangle = -50;
+                
+                else 
+                     m_particles[i].m_yangle = 50;
+                
+            
+            if (m_particles[i].m_xangle == 0)
+                m_particles[i].m_xangle++;
+            else if (m_particles[i].m_yangle == 0)
+                m_particles[i].m_yangle++;
+            m_particles[i].m_xpos += m_particles[i].m_xangle * m_particles[i].m_speed; //* ((rand() % m_length) + 1);
+            rand();
+            m_particles[i].m_ypos += m_particles[i].m_yangle * m_particles[i].m_speed; //* ((rand() % m_length) + 1);
         }
-        else if (m_particles[i].m_xpos > m_particles[i].m_lifetime || m_particles[i].m_ypos > m_particles[i].m_lifetime) {
+        else if (sqrt((m_xstart - m_particles[i].m_xpos) * (m_xstart - m_particles[i].m_xpos) + (m_ystart - m_particles[i].m_ypos) * (m_ystart - m_particles[i].m_ypos)) > m_particles[0].m_lifetime) {
             m_particles[i].m_xangle = m_particles[i].m_xangle * -1;
             m_particles[i].m_yangle = m_particles[i].m_yangle * -1;
             m_particles[i].m_xpos += m_particles[i].m_xangle * m_particles[i].m_speed;
             m_particles[i].m_ypos += m_particles[i].m_yangle * m_particles[i].m_speed;
+            m_start = 0;
         }
         else {
             m_particles[i].m_xpos += m_particles[i].m_xangle * m_particles[i].m_speed;
@@ -82,24 +109,43 @@ int point::setPointOneUpdate(int m_length) {
 int point::setPointDoubleUpdate(int m_length) { 
     srand (time(NULL));
     for (int i = 0; i < m_count; i++) {
-        if (m_particles[i].m_xpos == m_xstart && m_particles[i].m_ypos == m_ystart) {
-            m_particles[i].m_xangle = (rand() % 100) / 1000;
-            m_particles[i].m_yangle = (rand() % 100) / 1000;
-            if (rand() % 2 == 1)
-                m_particles[i].m_xangle = m_particles[i].m_xangle * -1;
-            if (rand() % 2 == 1)
-                m_particles[i].m_yangle = m_particles[i].m_yangle * -1;
+        if (m_particles[i].m_xpos == m_xstart && m_particles[i].m_ypos == m_ystart && m_start == 1) {
+            m_particles[i].m_xangle = ((rand() % 1000) - 500) / 10;
+            rand();
+            m_particles[i].m_yangle = ((rand() % 1000) - 500) / 10;
+            rand();
+            
+                if (i < m_count / 4) 
+                     m_particles[i].m_xangle = -50;
+                
+                else if (i < m_count / 2) 
+                     m_particles[i].m_xangle = 50;
+                
+                else if (i < (3 * m_count) / 4) 
+                     m_particles[i].m_yangle = -50;
+                
+                else 
+                     m_particles[i].m_yangle = 50;
+                
+            
+            if (m_particles[i].m_xangle == 0)
+                m_particles[i].m_xangle++;
+            else if (m_particles[i].m_yangle == 0)
+                m_particles[i].m_yangle++;
             m_particles[i].m_xpos += m_particles[i].m_xangle * m_particles[i].m_speed * (rand() % m_length);
             m_particles[i].m_ypos += m_particles[i].m_yangle * m_particles[i].m_speed * (rand() % m_length);
+            
         }
-        else if (m_particles[i].m_xpos > m_particles[i].m_lifetime || m_particles[i].m_ypos > m_particles[i].m_lifetime) {
-            m_particles[i].m_xpos = 0;
-            m_particles[i].m_ypos = 0;
+        else if (sqrt((m_xstart - m_particles[i].m_xpos) * (m_xstart - m_particles[i].m_xpos) + (m_ystart - m_particles[i].m_ypos) * (m_ystart - m_particles[i].m_ypos)) > m_particles[0].m_lifetime) {
+            m_particles[i].m_xpos = m_xstart;
+            m_particles[i].m_ypos = m_ystart;
+            m_start = 0;
         }
         else {
             m_particles[i].m_xpos += m_particles[i].m_xangle * m_particles[i].m_speed;
             m_particles[i].m_ypos += m_particles[i].m_yangle * m_particles[i].m_speed;
         }
+     
     }
     return 0;
 }
@@ -155,16 +201,16 @@ int point::setTransitionColor(char red, char green, char blue) {
     return 0;
 }
 
-int point::setAccel(float m_aux) {
+int point::setAccel() {
     for (int i = 0; i < m_count; i++) {
-        m_particles[i].m_speed += m_aux;
+        m_particles[i].m_speed += 0.000001;
     }
     return 0;
 }
 
-int point::setDecel(float m_aux) {
+int point::setDecel() {
     for (int i = 0; i < m_count; i++) {
-        m_particles[i].m_speed -= m_aux;
+        m_particles[i].m_speed -= 0.000001;
     }
     return 0;
 }
