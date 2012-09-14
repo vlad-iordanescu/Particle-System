@@ -39,12 +39,14 @@ liniar liniar_n[31];
 mouse mouse_n[31];
 char *texfile[31];
 string evfile[31];
-
+time_t start1,end1;
 int length;
 GLubyte *textureImage;
 FILE *fp;
+int fpsnr=0;
 
-	bool loadPngImage(char *name, int &outWidth, int &outHeight, bool &outHasAlpha, GLubyte **outData) {
+
+	bool loadPngImage(char *name, int &outWidth, int &outHeight, bool &outHasAlpha, GLubyte **outData) { 
 	    png_structp png_ptr;
 	    png_infop info_ptr;
 	    unsigned int sig_read = 0;
@@ -122,6 +124,16 @@ void MyDisplay_point_n(void) {
     
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        time (&end1);
+      if (difftime (end1,start1)>=1) {
+      cout<<fpsnr/30<<endl;
+      fpsnr = 0;
+      time (&start1);
+      }
+      else
+      fpsnr++;
+
     for (int j = 0; j < nr_point; j++) {
     if (evfile[j] != "Null"){
         glLoadIdentity();
@@ -342,6 +354,7 @@ void resizeWindow(int w, int h) {
 
 
 int main(int argc,char *argv[]){
+    time (&start1);
     float x, y;
     float (*coord)[2];
     float x1, y1, x2, y2;
