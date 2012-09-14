@@ -8,7 +8,7 @@ liniar::liniar() { }
 
 liniar::~liniar() { }
 
-int liniar::setParticles(int number, float (*coord)[2], float red, float green, float blue, float lifetime, float speed, float size) {
+int liniar::setParticles(int number, float (*coord)[2], float red, float green, float blue, float lifetime, float speed, float size, float time1, float time2) {
     int m_aux;
     m_particles_l = new particles[number];
     m_count = number;
@@ -35,31 +35,26 @@ int liniar::setParticles(int number, float (*coord)[2], float red, float green, 
         m_particles_l[i].m_xangle = (m_nextcoord[i][0] - m_particles_l[i].m_xpos) * m_particles_l[i].m_speed * m_aux;
         m_particles_l[i].m_yangle = (m_nextcoord[i][1] - m_particles_l[i].m_ypos) * m_particles_l[i].m_speed *  m_aux;
     }
+    bf_time = time1;
+    af_time = time2;
+    time (&start);
     return 0;
 }
 
 int liniar::setLiniarUpdate(){
     srand (time(NULL));
-   // int m_aux;
+
     for (int i = 0; i < m_count; i++) {
-        if (m_particles_l[i].m_xpos == m_coordonates[sizeof(m_coordonates[0])/2][0] && m_particles_l[i].m_ypos == m_coordonates[sizeof(m_coordonates[0])/2][1]) {
+        if (m_particles_l[i].m_xpos == m_coordonates[1][0] && m_particles_l[i].m_ypos == m_coordonates[1][1]) {
             m_particles_l[i].m_xpos = m_coordonates[0][0];
             m_particles_l[i].m_ypos = m_coordonates[0][1];
             m_nextcoord[i][0] = m_coordonates[1][0];
             m_nextcoord[i][1] = m_coordonates[1][1];
             m_poz[i] = 1;
-            //m_aux = ((rand() % 10) + 1);
-            m_particles_l[i].m_xangle = (m_nextcoord[i][0] - m_particles_l[i].m_xpos) * m_particles_l[i].m_speed;// * m_aux);
-            m_particles_l[i].m_yangle = (m_nextcoord[i][1] - m_particles_l[i].m_ypos) * m_particles_l[i].m_speed;// * m_aux);
+            m_particles_l[i].m_xangle = (m_coordonates[1][0] - m_particles_l[i].m_xpos) * m_particles_l[i].m_speed;
+            m_particles_l[i].m_yangle = (m_coordonates[1][1] - m_particles_l[i].m_ypos) * m_particles_l[i].m_speed;
         }
-        else if (m_particles_l[i].m_xpos == m_nextcoord[i][0] && m_particles_l[i].m_ypos == m_nextcoord[i][1]) {
-                    m_nextcoord[i][0] = m_coordonates[m_poz[i]+1][0];
-                    m_nextcoord[i][1] = m_coordonates[m_poz[i]+1][1];
-                    m_poz[i]++;
-            //m_aux = ((rand() % 10) + 1);
-            m_particles_l[i].m_xangle = (m_nextcoord[i][0] - m_particles_l[i].m_xpos) * m_particles_l[i].m_speed;// * m_aux;
-            m_particles_l[i].m_yangle = (m_nextcoord[i][1] - m_particles_l[i].m_ypos) * m_particles_l[i].m_speed;// * m_aux;
-        }
+
         else {
             m_particles_l[i].m_xpos += m_particles_l[i].m_xangle;
             m_particles_l[i].m_ypos += m_particles_l[i].m_yangle;
@@ -121,15 +116,29 @@ int liniar::setTransitionColor(char red, char green, char blue) {
 
 int liniar::setAccel() {
     for (int i = 0; i < m_count; i++) {
-        m_particles_l[i].m_speed += 0.000001;
+        m_particles_l[i].m_speed += 0.00001;
     }
     return 0;
 }
 
 int liniar::setDecel() {
     for (int i = 0; i < m_count; i++) {
-        m_particles_l[i].m_speed -= 0.000001;
+        m_particles_l[i].m_speed -= 0.00001;
     }
     return 0;
 }
 
+int liniar::setDelay() {
+      time (&end);
+      if (difftime (end,start) >= bf_time)
+          return 1;
+      else 
+          return 0;
+}
+int liniar::setDuration() {
+      time (&end);
+      if (difftime (end,start) - bf_time <= af_time)
+          return 1;
+      else 
+          return 0;
+}

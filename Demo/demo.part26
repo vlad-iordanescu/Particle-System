@@ -1,0 +1,15 @@
+MovementType = mouse
+Number = 200
+Coordonates = 30
+RedColor = 0
+GreenColor = 0
+BlueColor = 255
+Lifetime = 300
+Speed = 0.01
+Size = 2
+ColorEffect = Null
+SpeedEffect = accel
+Filter = Null
+Delay = 0
+Duration = 32
+Texture = Null

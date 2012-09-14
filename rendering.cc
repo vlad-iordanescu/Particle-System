@@ -1,38 +1,115 @@
 #include<iostream>
-#include<string.h>
 #include "mouse.h"
 using namespace std;
+#include<fstream>
 #include<GL/glut.h>
 #include<GL/gl.h>
 #include<GL/glu.h>
-bool m_RndClr = false;
-bool m_TrClr = false;
-bool m_Accel = false;
-bool m_Decel = false;
-bool m_point = false;
-bool m_point_r = false;
-bool m_point_rd = false;
+#include<png.h>
+#include <cstdio>
+#include <string.h>
+
+bool m_RndClr_point = false;
+bool m_RndClr_global = false;
+bool m_RndClr_liniar = false;
+bool m_RndClr_mouse = false;
+bool m_point[31];
+bool m_point_r[31];
+bool m_point_rd[31];
 bool m_point_accel = false;
 bool m_point_decel = false;
-bool m_global = false;
-bool m_global_blk = false;
-bool m_global_rain = false;
+bool m_global[31];
+bool m_global_blk[31];
+bool m_global_rain[31];
 bool m_global_accel = false;
 bool m_global_decel = false;
-bool m_liniar = false;
+bool m_liniar[31];
 bool m_liniar_accel = false;
 bool m_liniar_decel = false;
-bool m_mouse = false;
+bool m_mouse[31];
 bool m_mouse_accel = false;
 bool m_mouse_decel = false;
+short nr_point = 0, nr_liniar = 0, nr_global = 0, nr_mouse = 0;
 short start = 1;
 const double Xmin = 0.0, Xmax = 1000.0;
 const double Ymin = 0.0, Ymax = 1000.0;
-point point_n;
-global global_n;
-liniar liniar_n;
-mouse mouse_n;
+point point_n[31];
+global global_n[31];
+liniar liniar_n[31];
+mouse mouse_n[31];
+char *texfile[31];
+string evfile[31];
+
 int length;
+GLubyte *textureImage;
+FILE *fp;
+
+	bool loadPngImage(char *name, int &outWidth, int &outHeight, bool &outHasAlpha, GLubyte **outData) {
+	    png_structp png_ptr;
+	    png_infop info_ptr;
+	    unsigned int sig_read = 0;
+	    if ((fp = fopen(name, "rb")) == NULL)
+  return false;
+
+	    png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING,
+	            NULL, NULL, NULL);
+	 
+	    if (png_ptr == NULL) {
+	        fclose(fp);
+	        return false;
+	    }
+
+	    info_ptr = png_create_info_struct(png_ptr);
+	    if (info_ptr == NULL) {
+	        fclose(fp);
+	        png_destroy_read_struct(&png_ptr, png_infopp_NULL, png_infopp_NULL);
+	        return false;
+	    }
+
+	    if (setjmp(png_jmpbuf(png_ptr))) {
+
+	        png_destroy_read_struct(&png_ptr, &info_ptr, png_infopp_NULL);
+	        fclose(fp);
+
+	        return false;
+	    }
+
+	    png_init_io(png_ptr, fp);
+
+	    png_set_sig_bytes(png_ptr, sig_read);
+	 
+
+	    png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING | PNG_TRANSFORM_EXPAND, png_voidp_NULL);
+	 
+	    outWidth = info_ptr->width;
+	    outHeight = info_ptr->height;
+	    switch (info_ptr->color_type) {
+	        case PNG_COLOR_TYPE_RGBA:
+	            outHasAlpha = true;
+	            break;
+	        case PNG_COLOR_TYPE_RGB:
+	            outHasAlpha = false;
+	            break;
+	        default:
+	            
+	            png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+	            fclose(fp);
+	            return false;
+	    }
+	    unsigned int row_bytes = png_get_rowbytes(png_ptr, info_ptr);
+	    *outData = (unsigned char*) malloc(row_bytes * outHeight);
+	 
+	    png_bytepp row_pointers = png_get_rows(png_ptr, info_ptr);
+	 
+	    for (int i = 0; i < outHeight; i++) {
+
+	        memcpy(*outData+(row_bytes * (outHeight-1-i)), row_pointers[i], row_bytes);
+	    }
+
+	    png_destroy_read_struct(&png_ptr, &info_ptr, png_infopp_NULL);
+	fclose(fp);
+	    return true;
+	}
 
 float m_xmouse_pos, m_ymouse_pos;
 void setmouseMovement(int x, int y) {
@@ -42,68 +119,193 @@ void setmouseMovement(int x, int y) {
 }
 
 void MyDisplay_point_n(void) {
-
+    
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    if(m_RndClr == true)
-        point_n.setRandomColor();
-    if (m_point == true || m_point_r == true || m_point_rd == true)
-        glColor3f(point_n.m_particles[0].m_red, point_n.m_particles[0].m_green, point_n.m_particles[0].m_blue);  
-    if (m_global == true || m_global_blk == true || m_global_rain == true)
-        glColor3f(global_n.m_particles_r[0].m_red, global_n.m_particles_r[0].m_green, global_n.m_particles_r[0].m_blue);
-    if (m_liniar == true)
-        glColor3f(liniar_n.m_particles_l[0].m_red, liniar_n.m_particles_l[0].m_green, liniar_n.m_particles_l[0].m_blue);
-    if (m_mouse == true)
-        glColor3f(mouse_n.m_particles_m[0].m_red, mouse_n.m_particles_m[0].m_green, mouse_n.m_particles_m[0].m_blue);
-    glBegin(GL_POINTS);
-    if (m_point == true)
-        point_n.setPointMultipleUpdate();
-    if (m_point_r == true)
-        point_n.setPointOneUpdate(length);
-    if (m_point_rd == true)
-        point_n.setPointDoubleUpdate(length);
+    for (int j = 0; j < nr_point; j++) {
+    if (evfile[j] != "Null"){
+        glLoadIdentity();
+        glEnable(GL_TEXTURE_2D);
+
+int width, height;
+	    bool hasAlpha;
+	    loadPngImage(texfile[j], width, height, hasAlpha, &textureImage);
+	    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	    glTexImage2D(GL_TEXTURE_2D, 0, hasAlpha ? 4 : 3, width, height, 0, hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, textureImage);
+
+	    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	    glEnable(GL_TEXTURE_2D);
+	    glShadeModel(GL_FLAT);
+            glEnable(GL_POINT_SPRITE);
+            glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
+            glBegin(GL_POINTS);
+if (m_point[j] == true)
+        point_n[j].setPointMultipleUpdate();
+    if (m_point_r[j] == true)
+        point_n[j].setPointOneUpdate(length);
+    if (m_point_rd[j] == true)
+        point_n[j].setPointDoubleUpdate(length);
     if (m_point_accel == true)
-        point_n.setAccel();
+        point_n[j].setAccel();
     if (m_point_decel == true)
-        point_n.setDecel();
-    if (m_global == true)
-        global_n.setUpdateRandomMov();
-    if (m_global_blk == true)
-        global_n.setUpdateRandomBlink();
-    if (m_global_rain == true)
-        global_n.setUpdateRain();
+        point_n[j].setDecel();
+    if (m_global[j] == true)
+        global_n[j].setUpdateRandomMov();
+    if (m_global_blk[j] == true)
+        global_n[j].setUpdateRandomBlink();
+    if (m_global_rain[j] == true)
+        global_n[j].setUpdateRain();
     if (m_global_accel == true)
-        global_n.setAccel();
+        global_n[j].setAccel();
     if (m_global_decel == true)
-        global_n.setDecel();
-    if (m_mouse == true)
-        mouse_n.setMouseParticleUpdate(m_xmouse_pos, m_ymouse_pos);
+        global_n[j].setDecel();
+    if (m_mouse[j] == true)
+        mouse_n[j].setMouseParticleUpdate(m_xmouse_pos, m_ymouse_pos);
     if (m_mouse_accel == true)
-        mouse_n.setAccel();
+        mouse_n[j].setAccel();
     if (m_mouse_decel == true)
-        mouse_n.setDecel();
-    if (m_liniar == true)
-        liniar_n.setLiniarUpdate();
+        mouse_n[j].setDecel();
+    if (m_liniar[j] == true)
+        liniar_n[j].setLiniarUpdate();
     if (m_liniar_accel == true)
-        liniar_n.setAccel();
+        liniar_n[j].setAccel();
     if (m_liniar_decel == true)
-        liniar_n.setDecel();
-    if (m_point == true || m_point_r == true || m_point_rd == true) {
-        for (int i = 0; i < point_n.m_count; i++) 
-            glVertex2f(point_n.m_particles[i].m_xpos, point_n.m_particles[i].m_ypos);
+        liniar_n[j].setDecel();
+
+
+    if (point_n[j].setDelay() == 1 && point_n[j].setDuration() == 1) {
+    if (m_point[j] == true || m_point_r[j] == true || m_point_rd[j] == true) {
+        for (int i = 0; i < point_n[j].m_count; i++)
+            glVertex2f((point_n[j].m_particles[i].m_xpos - 500) / 500, (point_n[j].m_particles[i].m_ypos - 500) / 500);
+    }	
     }
-    if (m_global == true || m_global_blk == true || m_global_rain == true) {
-        for (int i = 0; i < global_n.m_count; i++) 
-            glVertex2f(global_n.m_particles_r[i].m_xpos, global_n.m_particles_r[i].m_ypos);
+
+    if (global_n[j].setDelay() == 1 && global_n[j].setDuration() == 1) {
+    if (m_global[j] == true || m_global_blk[j] == true || m_global_rain[j] == true) {
+        for (int i = 0; i < global_n[j].m_count; i++) 
+            glVertex2f((global_n[j].m_particles_r[i].m_xpos - 500) / 500, (global_n[j].m_particles_r[i].m_ypos - 500) / 500);
     }
-    if (m_liniar == true) {
-        for (int i = 0; i < liniar_n.m_count; i++) 
-            glVertex2f(liniar_n.m_particles_l[i].m_xpos, liniar_n.m_particles_l[i].m_ypos);
     }
-    if (m_mouse == true) {
-        for (int i = 0; i < mouse_n.m_count; i++) 
-            glVertex2f(mouse_n.m_particles_m[i].m_xpos, mouse_n.m_particles_m[i].m_ypos);
+
+    if (liniar_n[j].setDelay() == 1 && liniar_n[j].setDuration() == 1) {
+    if (m_liniar[j] == true) {
+        for (int i = 0; i < liniar_n[j].m_count; i++) 
+            glVertex2f((liniar_n[j].m_particles_l[i].m_xpos - 500) / 500, (liniar_n[j].m_particles_l[i].m_ypos - 500) / 500);
     }
+    }
+
+    if (mouse_n[j].setDelay() == 1 && mouse_n[j].setDuration() == 1) {
+    if (m_mouse[j] == true) {
+        for (int i = 0; i < mouse_n[j].m_count; i++) 
+            glVertex2f((mouse_n[j].m_particles_m[i].m_xpos - 500) / 500, (mouse_n[j].m_particles_m[i].m_ypos - 500) / 500);
+    }
+    }
+
+            glEnd();
+            glDeleteTextures(1,(GLuint*)textureImage);
+            delete[] textureImage;
+            glDisable(GL_POINT_SPRITE);
+            glBindTexture(GL_TEXTURE_2D, 0);
+            glDisable(GL_TEXTURE_2D);
+}
+
+else {
+    glBegin(GL_POINTS);
+    if (point_n[j].setDelay() == 1&& point_n[j].setDuration() == 1) {
+    if (m_point[j] == true || m_point_r[j] == true || m_point_rd[j] == true)
+        glColor3f(point_n[j].m_particles[0].m_red, point_n[j].m_particles[0].m_green, point_n[j].m_particles[0].m_blue);  
+    }
+
+    if (global_n[j].setDelay() == 1&& global_n[j].setDuration() == 1) {
+    if (m_global[j] == true || m_global_blk[j] == true || m_global_rain[j] == true)
+        glColor3f(global_n[j].m_particles_r[0].m_red, global_n[j].m_particles_r[0].m_green, global_n[j].m_particles_r[0].m_blue);
+    }
+
+    if (liniar_n[j].setDelay() == 1&& liniar_n[j].setDuration() == 1) {
+    if (m_liniar[j] == true)
+        glColor3f(liniar_n[j].m_particles_l[0].m_red, liniar_n[j].m_particles_l[0].m_green, liniar_n[j].m_particles_l[0].m_blue); 
+    }
+
+    if (mouse_n[j].setDelay() == 1&& mouse_n[j].setDuration() == 1) {
+    if (m_mouse[j] == true)
+        glColor3f(mouse_n[j].m_particles_m[0].m_red, mouse_n[j].m_particles_m[0].m_green, mouse_n[j].m_particles_m[0].m_blue);
+    }
+
+
+    if (m_point[j] == true)
+        point_n[j].setPointMultipleUpdate();
+    if (m_point_r[j] == true)
+        point_n[j].setPointOneUpdate(length);
+    if (m_point_rd[j] == true)
+        point_n[j].setPointDoubleUpdate(length);
+    if (m_point_accel == true)
+        point_n[j].setAccel();
+    if (m_point_decel == true)
+        point_n[j].setDecel();
+    if (m_global[j] == true)
+        global_n[j].setUpdateRandomMov();
+    if (m_global_blk[j] == true)
+        global_n[j].setUpdateRandomBlink();
+    if (m_global_rain[j] == true)
+        global_n[j].setUpdateRain();
+    if (m_global_accel == true)
+        global_n[j].setAccel();
+    if (m_global_decel == true)
+        global_n[j].setDecel();
+    if (m_mouse[j] == true)
+        mouse_n[j].setMouseParticleUpdate(m_xmouse_pos, m_ymouse_pos);
+    if (m_mouse_accel == true)
+        mouse_n[j].setAccel();
+    if (m_mouse_decel == true)
+        mouse_n[j].setDecel();
+    if (m_liniar[j] == true)
+        liniar_n[j].setLiniarUpdate();
+    if (m_liniar_accel == true)
+        liniar_n[j].setAccel();
+    if (m_liniar_decel == true)
+        liniar_n[j].setDecel();
+    if (m_RndClr_point == true)
+        point_n[j].setRandomColor();
+    if (m_RndClr_liniar == true)
+        liniar_n[j].setRandomColor();
+    if (m_RndClr_global == true)
+        global_n[j].setRandomColor();
+    if (m_RndClr_mouse == true)
+        mouse_n[j].setRandomColor();
+
+    if (point_n[j].setDelay() == 1 && point_n[j].setDuration() == 1) {
+    if (m_point[j] == true || m_point_r[j] == true || m_point_rd[j] == true) {
+        for (int i = 0; i < point_n[j].m_count; i++)
+            glVertex2f(point_n[j].m_particles[i].m_xpos, point_n[j].m_particles[i].m_ypos);
+    }	
+    }
+
+    if (global_n[j].setDelay() == 1 && global_n[j].setDuration() == 1) {
+    if (m_global[j] == true || m_global_blk[j] == true || m_global_rain[j] == true) {
+        for (int i = 0; i < global_n[j].m_count; i++) 
+            glVertex2f(global_n[j].m_particles_r[i].m_xpos, global_n[j].m_particles_r[i].m_ypos);
+    }
+    }
+
+    if (liniar_n[j].setDelay() == 1 && liniar_n[j].setDuration() == 1) {
+    if (m_liniar[j] == true) {
+        for (int i = 0; i < liniar_n[j].m_count; i++) 
+            glVertex2f(liniar_n[j].m_particles_l[i].m_xpos, liniar_n[j].m_particles_l[i].m_ypos);
+    }
+    }
+
+    if (mouse_n[j].setDelay() == 1 && mouse_n[j].setDuration() == 1) {
+    if (m_mouse[j] == true) {
+        for (int i = 0; i < mouse_n[j].m_count; i++) 
+            glVertex2f(mouse_n[j].m_particles_m[i].m_xpos, mouse_n[j].m_particles_m[i].m_ypos);
+    }
+    }
+}
+    glEnd();
+}
     glEnd();
     glutSwapBuffers();
 
@@ -144,540 +346,593 @@ int main(int argc,char *argv[]){
     float (*coord)[2];
     float x1, y1, x2, y2;
     float red, green, blue;
-    char tr_red, tr_green, tr_blue;
     float lifetime, speed, size;
-    int number;
+    int number, i;
+    float del_time, dur_time;
     string m_str;
-    m_str = argv[1];
+    for (i = 1; i < argc; i++) {
+    ifstream file;
+    file.open(argv[i]);
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     if (m_str == "point") {
-    m_point = true;
-    m_str = argv[2];;
+    m_point[nr_point] = true;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     number = atoi(m_str.c_str());
-    m_str = argv[3];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     x = atof(m_str.c_str());
-    m_str = argv[4];
+    file>>m_str;
     y = atof(m_str.c_str());
-    m_str = argv[5];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     red = atof(m_str.c_str());
-    m_str = argv[6];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     green = atof(m_str.c_str());
-    m_str = argv[7];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     blue = atof(m_str.c_str());
-    m_str = argv[8];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;;
     lifetime = atof(m_str.c_str());
-    m_str = argv[9];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     speed = atof(m_str.c_str());
-    m_str = argv[10];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     size = atof(m_str.c_str());
-    m_str = argv[11];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     if (m_str == "random")
-        m_RndClr = true;
-    else if (m_str == "colortrans")
-        m_TrClr = true;
-    if (m_TrClr) {
-    m_str = argv[12];
-    tr_red = (char)atoi(m_str.c_str());
-    m_str = argv[13];
-    tr_green = (char)atoi(m_str.c_str());
-    m_str = argv[14];
-    tr_blue = (char)atoi(m_str.c_str());
-    m_str = argv[15];
+        m_RndClr_point = true;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     if (m_str == "accel")
         m_point_accel = true;
     else if (m_str == "decel")
         m_point_decel = true;
-    }
-    else {
-        m_str = argv[12];
-    if (m_str == "accel")
-        m_point_accel = true;
-    else if (m_str == "decel")
-        m_point_decel = true;
-    }
-
-
-    glutInit(&argc, argv);
-    glutInitWindowSize(800, 600);
-    glutInitWindowPosition(0, 0);
-    glutCreateWindow("Particle System");
-    glutInitDisplayMode(GLUT_RGBA | GLUT_SINGLE);
-    glEnable( GL_DEPTH_TEST );
-    glPointSize(size);
-    glutReshapeFunc( resizeWindow );
-    point_n.setParticle(number, x, y, red, green, blue, lifetime, speed, size);
-    glutDisplayFunc(MyDisplay_point_n);   
-    glutIdleFunc(MyDisplay_point_n);
-
-    glutMainLoop();
+        file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    del_time = atof(m_str.c_str());
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    dur_time = atof(m_str.c_str());
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    texfile[nr_point] = (char*)m_str.c_str();
+    evfile[nr_point] = m_str;
+    point_n[nr_point].setParticle(number, x, y, red, green, blue, lifetime, speed, size, del_time,dur_time);
+    nr_point++;
 
     
     }
     else if (m_str == "point_r") {
-    m_point_r = true;
-    m_str = argv[2];;
+    m_point_r[nr_point] = true;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     number = atoi(m_str.c_str());
-    m_str = argv[3];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     x = atof(m_str.c_str());
-    m_str = argv[4];
+    file>>m_str;
     y = atof(m_str.c_str());
-    m_str = argv[5];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     red = atof(m_str.c_str());
-    m_str = argv[6];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     green = atof(m_str.c_str());
-    m_str = argv[7];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     blue = atof(m_str.c_str());
-    m_str = argv[8];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;;
     lifetime = atof(m_str.c_str());
-    m_str = argv[9];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     speed = atof(m_str.c_str());
-    m_str = argv[10];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     size = atof(m_str.c_str());
-    m_str = argv[11];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     if (m_str == "random")
-        m_RndClr = true;
-    else if (m_str == "colortrans")
-        m_TrClr = true;
-    if (m_TrClr == true) {
-    m_str = argv[12];
-    tr_red = (char)atoi(m_str.c_str());
-    m_str = argv[13];
-    tr_green = (char)atoi(m_str.c_str());
-    m_str = argv[14];
-    tr_blue = (char)atoi(m_str.c_str());
-    m_str = argv[15];
+        m_RndClr_point = true;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     if (m_str == "accel")
         m_point_accel = true;
     else if (m_str == "decel")
         m_point_decel = true;
-    m_str = argv[16];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     length = atoi(m_str.c_str());
-    }
-    else {
-        m_str = argv[12];
-    if (m_str == "accel")
-        m_point_accel = true;
-    else if (m_str == "decel")
-        m_point_decel = true;
-    m_str = argv[13];
-    length = atoi(m_str.c_str());
-    }
-    glutInit(&argc, argv);
-    glutInitWindowSize(800, 600);
-    glutInitWindowPosition(0, 0);
-    glutCreateWindow("Particle System");
-    glutInitDisplayMode(GLUT_RGBA | GLUT_SINGLE);
-    glEnable( GL_DEPTH_TEST );
-    glPointSize(size);
-    glutReshapeFunc( resizeWindow );
-    point_n.setParticle(number, x, y, red, green, blue, lifetime, speed, size);
-    glutDisplayFunc(MyDisplay_point_n);   
-    glutIdleFunc(MyDisplay_point_n);
-
-    glutMainLoop();
+        file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    del_time = atof(m_str.c_str());
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    dur_time = atof(m_str.c_str());
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    texfile[nr_point] = (char*)m_str.c_str();
+    evfile[nr_point] = m_str;
+    point_n[nr_point].setParticle(number, x, y, red, green, blue, lifetime, speed, size, del_time, dur_time);
+    nr_point++;
     }
     else if (m_str == "point_rd") {
-    m_point_rd = true;
-    m_str = argv[2];;
+    m_point_rd[nr_point] = true;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     number = atoi(m_str.c_str());
-    m_str = argv[3];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     x = atof(m_str.c_str());
-    m_str = argv[4];
+    file>>m_str;
     y = atof(m_str.c_str());
-    m_str = argv[5];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     red = atof(m_str.c_str());
-    m_str = argv[6];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     green = atof(m_str.c_str());
-    m_str = argv[7];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     blue = atof(m_str.c_str());
-    m_str = argv[8];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;;
     lifetime = atof(m_str.c_str());
-    m_str = argv[9];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     speed = atof(m_str.c_str());
-    m_str = argv[10];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     size = atof(m_str.c_str());
-    m_str = argv[11];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     if (m_str == "random")
-        m_RndClr = true;
-    else if (m_str == "colortrans")
-        m_TrClr = true;
-    if (m_TrClr == true) {
-    m_str = argv[12];
-    tr_red = (char)atoi(m_str.c_str());
-    m_str = argv[13];
-    tr_green = (char)atoi(m_str.c_str());
-    m_str = argv[14];
-    tr_blue = (char)atoi(m_str.c_str());
-    m_str = argv[15];
+        m_RndClr_point = true;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     if (m_str == "accel")
         m_point_accel = true;
     else if (m_str == "decel")
         m_point_decel = true;
-    m_str = argv[16];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     length = atoi(m_str.c_str());
-    }
-    else {
-        m_str = argv[12];
-    if (m_str == "accel")
-        m_point_accel = true;
-    else if (m_str == "decel")
-        m_point_decel = true;
-    m_str = argv[13];
-    length = atoi(m_str.c_str());
-    }
-    glutInit(&argc, argv);
-    glutInitWindowSize(800, 600);
-    glutInitWindowPosition(0, 0);
-    glutCreateWindow("Particle System");
-    glutInitDisplayMode(GLUT_RGBA | GLUT_SINGLE);
-    glEnable( GL_DEPTH_TEST );
-    glPointSize(size);
-    glutReshapeFunc( resizeWindow );
-    point_n.setParticle(number, x, y, red, green, blue, lifetime, speed, size);
-    glutDisplayFunc(MyDisplay_point_n);   
-    glutIdleFunc(MyDisplay_point_n);
-
-    glutMainLoop();
+        file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    del_time = atof(m_str.c_str());
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    dur_time = atof(m_str.c_str());
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    texfile[nr_point] = (char*)m_str.c_str();
+    evfile[nr_point] = m_str;
+    point_n[nr_point].setParticle(number, x, y, red, green, blue, lifetime, speed, size, del_time, dur_time);
+    nr_point++;
     }
     else if (m_str == "liniar") {
-    m_liniar = true;
-    int aux;
-
-    m_str = argv[2];;
+    m_liniar[nr_point] = true;
+    coord = new float[2][2];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     number = atoi(m_str.c_str());
-    if (argc % 2 == 1) {
-        coord = new float[(argc - 11) / 2][2];
-        for(int i = 0; i < (argc - 11) / 2; i++) {
-            m_str = argv[3 + 2 * i];
-            x = atof(m_str.c_str());
-            coord[i][0] = x;
-            
-            m_str = argv[3 + 2 * i + 1];
-            y = atof(m_str.c_str());
-            coord[i][1] = y;
-        }
-    aux = (argc - 11);
-    }
-    
-    else {
-        coord = new float[(argc - 13) / 2][2];
-        for(int i = 0; i < (argc - 13) / 2; i++) {
-            m_str = argv[3 + 2 * i];
-            x = atof(m_str.c_str());
-            coord[i][0] = x;
-            m_str = argv[4 + 2 * i + 1];
-            y = atof(m_str.c_str());
-            coord[i][1] = y;
-        }
-    aux = (argc - 13);
-    }
-    m_str = argv[3 + aux];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    coord[0][0] = atof(m_str.c_str());
+    file>>m_str;
+    coord[0][1] = atof(m_str.c_str());
+    file>>m_str;
+    coord[1][0] = atof(m_str.c_str());
+    file>>m_str;
+    coord[1][1] = atof(m_str.c_str());
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     red = atof(m_str.c_str());
-    m_str = argv[4 + aux];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     green = atof(m_str.c_str());
-    m_str = argv[5 + aux];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     blue = atof(m_str.c_str());
-    m_str = argv[6 + aux];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;;
     lifetime = atof(m_str.c_str());
-    m_str = argv[7 + aux];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     speed = atof(m_str.c_str());
-    m_str = argv[8 + aux];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     size = atof(m_str.c_str());
-    m_str = argv[9 + aux];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     if (m_str == "random")
-        m_RndClr = true;
-    else if (m_str == "colortrans") 
-        m_TrClr = true;
-    if (m_TrClr) {
-    m_str = argv[10 + aux];
-    tr_red = (char)atoi(m_str.c_str());
-    m_str = argv[11 + aux];
-    tr_green = (char)atoi(m_str.c_str());
-    m_str = argv[12 + aux];
-    tr_blue = (char)atoi(m_str.c_str());
-    m_str = argv[13 + aux];
+        m_RndClr_liniar = true;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     if (m_str == "accel")
-        m_liniar_accel = true;
+        m_point_accel = true;
     else if (m_str == "decel")
-        m_liniar_decel = true;
-    }
-    else {
-        m_str = argv[10 + aux];
-    if (m_str == "accel")
-        m_liniar_accel = true;
-    else if (m_str == "decel")
-        m_liniar_decel = true;
-    }
+        m_point_decel = true;
+        file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    del_time = atof(m_str.c_str());
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    dur_time = atof(m_str.c_str());
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    texfile[nr_point] = (char*)m_str.c_str();
+    evfile[nr_point] = m_str;
+    liniar_n[nr_point].setParticles(number, coord, red, green, blue, lifetime, speed, size, del_time, dur_time);
+    nr_point++;
 
-    glutInit(&argc, argv);
-    glutInitWindowSize(800, 600);
-    glutInitWindowPosition(0, 0);
-    glutCreateWindow("Particle System");
-    glutInitDisplayMode(GLUT_RGBA | GLUT_SINGLE);
-    glEnable( GL_DEPTH_TEST );
-    glPointSize(size);
-    liniar_n.setParticles(number, coord, red, green, blue, lifetime, speed, size);
-    glutReshapeFunc( resizeWindow );
-    glutDisplayFunc(MyDisplay_point_n);   
-    glutIdleFunc(MyDisplay_point_n);
-
-    glutMainLoop();
     }
     else if (m_str == "random") {
-    m_global = true;
-    m_str = argv[2];;
+    m_global[nr_point] = true;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     number = atoi(m_str.c_str());
-    m_str = argv[3];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     x1 = atof(m_str.c_str());
-    m_str = argv[4];
+    file>>m_str;
     y1 = atof(m_str.c_str());
-    m_str = argv[5];
+    file>>m_str;
     x2 = atof(m_str.c_str());
-    m_str = argv[6];
+    file>>m_str;
     y2 = atof(m_str.c_str());
-    m_str = argv[7];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     red = atof(m_str.c_str());
-    m_str = argv[8];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     green = atof(m_str.c_str());
-    m_str = argv[9];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     blue = atof(m_str.c_str());
-    m_str = argv[10];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;;
     lifetime = atof(m_str.c_str());
-    m_str = argv[11];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     speed = atof(m_str.c_str());
-    m_str = argv[12];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     size = atof(m_str.c_str());
-    m_str = argv[13];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     if (m_str == "random")
-        m_RndClr = true;
-    else if (m_str == "colortrans")
-        m_TrClr = true;
-    if (m_TrClr) {
-    m_str = argv[14];
-    tr_red = (char)atoi(m_str.c_str());
-    m_str = argv[15];
-    tr_green = (char)atoi(m_str.c_str());
-    m_str = argv[16];
-    tr_blue = (char)atoi(m_str.c_str());
-    m_str = argv[17];
+        m_RndClr_global = true;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     if (m_str == "accel")
-        m_global_accel = true;
+        m_point_accel = true;
     else if (m_str == "decel")
-        m_global_decel = true;
-    }
-    else {
-        m_str = argv[14];
-    if (m_str == "accel")
-        m_global_accel = true;
-    else if (m_str == "decel")
-        m_global_decel = true;
-    }
+        m_point_decel = true;
+        file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    del_time = atof(m_str.c_str());
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    dur_time = atof(m_str.c_str());
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    texfile[nr_point] = (char*)m_str.c_str();
+    evfile[nr_point] = m_str;
+    global_n[nr_point].setParticle(number, x1, y1, x2, y2, red, green, blue, lifetime, speed, size, del_time, dur_time);
+    nr_point++;
 
-    glutInit(&argc, argv);
-    glutInitWindowSize(800, 600);
-    glutInitWindowPosition(0, 0);
-    glutCreateWindow("Particle System");
-    glutInitDisplayMode(GLUT_RGBA | GLUT_SINGLE);
-    glEnable( GL_DEPTH_TEST );
-    glPointSize(size);
-    global_n.setParticle(number, x1, y1, x2, y2, red, green, blue, lifetime, speed, size);
-    glutReshapeFunc( resizeWindow );
-    glutDisplayFunc(MyDisplay_point_n);   
-    glutIdleFunc(MyDisplay_point_n);
-
-    glutMainLoop();
     }
     else if (m_str == "random_blk") {
-    m_global_blk = true;
-    m_str = argv[2];;
+    m_global_blk[nr_point] = true;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     number = atoi(m_str.c_str());
-    m_str = argv[3];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     x1 = atof(m_str.c_str());
-    m_str = argv[4];
+    file>>m_str;
     y1 = atof(m_str.c_str());
-    m_str = argv[5];
+    file>>m_str;
     x2 = atof(m_str.c_str());
-    m_str = argv[6];
+    file>>m_str;
     y2 = atof(m_str.c_str());
-    m_str = argv[7];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     red = atof(m_str.c_str());
-    m_str = argv[8];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     green = atof(m_str.c_str());
-    m_str = argv[9];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     blue = atof(m_str.c_str());
-    m_str = argv[10];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;;
     lifetime = atof(m_str.c_str());
-    m_str = argv[11];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     speed = atof(m_str.c_str());
-    m_str = argv[12];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     size = atof(m_str.c_str());
-    m_str = argv[13];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     if (m_str == "random")
-        m_RndClr = true;
-    else if (m_str == "colortrans")
-        m_TrClr = true;
-    if (m_TrClr) {
-    m_str = argv[14];
-    tr_red = (char)atoi(m_str.c_str());
-    m_str = argv[15];
-    tr_green = (char)atoi(m_str.c_str());
-    m_str = argv[16];
-    tr_blue = (char)atoi(m_str.c_str());
-    m_str = argv[17];
+        m_RndClr_global = true;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     if (m_str == "accel")
-        m_global_accel = true;
+        m_point_accel = true;
     else if (m_str == "decel")
-        m_global_decel = true;
-    }
-    else {
-        m_str = argv[14];
-    if (m_str == "accel")
-        m_global_accel = true;
-    else if (m_str == "decel")
-        m_global_decel = true;
-    }
-
-    glutInit(&argc, argv);
-    glutInitWindowSize(800, 600);
-    glutInitWindowPosition(0, 0);
-    glutCreateWindow("Particle System");
-    glutInitDisplayMode(GLUT_RGBA | GLUT_SINGLE);
-    glEnable( GL_DEPTH_TEST );
-    glPointSize(size);
-    global_n.setParticle(number, x1, y1, x2, y2, red, green, blue, lifetime, speed, size);
-    glutReshapeFunc( resizeWindow );
-    glutDisplayFunc(MyDisplay_point_n);   
-    glutIdleFunc(MyDisplay_point_n);
-
-    glutMainLoop();
+        m_point_decel = true;
+        file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    del_time = atof(m_str.c_str());
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    dur_time = atof(m_str.c_str());
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    texfile[nr_point] = (char*)m_str.c_str();
+    evfile[nr_point] = m_str;
+    global_n[nr_point].setParticle(number, x1, y1, x2, y2, red, green, blue, lifetime, speed, size, del_time, dur_time);
+    nr_point++;
     }
     else if (m_str == "random_rain") {
-    m_global_rain = true;	
-    m_str = argv[2];
+    m_global_rain[nr_point] = true;	
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     number = atoi(m_str.c_str());
-    m_str = argv[3];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     x1 = atof(m_str.c_str());
-    m_str = argv[4];
+    file>>m_str;
     y1 = atof(m_str.c_str());
-    m_str = argv[5];
+    file>>m_str;
     x2 = atof(m_str.c_str());
-    m_str = argv[6];
+    file>>m_str;
     y2 = atof(m_str.c_str());
-    m_str = argv[7];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     red = atof(m_str.c_str());
-    m_str = argv[8];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     green = atof(m_str.c_str());
-    m_str = argv[9];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     blue = atof(m_str.c_str());
-    m_str = argv[10];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;;
     lifetime = atof(m_str.c_str());
-    m_str = argv[11];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     speed = atof(m_str.c_str());
-    m_str = argv[12];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     size = atof(m_str.c_str());
-    m_str = argv[13];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     if (m_str == "random")
-        m_RndClr = true;
-    else if (m_str == "colortrans")
-        m_TrClr = true;
-    if (m_TrClr) {
-    m_str = argv[14];
-    tr_red = (char)atoi(m_str.c_str());
-    m_str = argv[15];
-    tr_green = (char)atoi(m_str.c_str());
-    m_str = argv[16];
-    tr_blue = (char)atoi(m_str.c_str());
-    m_str = argv[17];
+        m_RndClr_global = true;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     if (m_str == "accel")
-        m_global_accel = true;
+        m_point_accel = true;
     else if (m_str == "decel")
-        m_global_decel = true;
-    }
-    else {
-        m_str = argv[14];
-    if (m_str == "accel")
-        m_global_accel = true;
-    else if (m_str == "decel")
-        m_global_decel = true;
-    }
-
-    glutInit(&argc, argv);
-    glutInitWindowSize(800, 600);
-    glutInitWindowPosition(0, 0);
-    glutCreateWindow("Particle System");
-    glutInitDisplayMode(GLUT_RGBA | GLUT_SINGLE);
-    glEnable( GL_DEPTH_TEST );
-    glPointSize(size);
-    global_n.setParticle(number, x1, y1, x2, y2, red, green, blue, lifetime, speed, size);
-    glutReshapeFunc( resizeWindow );
-    glutDisplayFunc(MyDisplay_point_n);   
-    glutIdleFunc(MyDisplay_point_n);
-
-    glutMainLoop();
+        m_point_decel = true;
+        file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    del_time = atof(m_str.c_str());
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    dur_time = atof(m_str.c_str());
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    texfile[nr_point] = (char*)m_str.c_str();
+    evfile[nr_point] = m_str;
+    global_n[nr_point].setParticle(number, x1, y1, x2, y2, red, green, blue, lifetime, speed, size, del_time, dur_time);
+    nr_point++;
     }
     
     else if (m_str == "mouse") {
     float length;
-    m_mouse = true;
-    m_str = argv[2];;
+    m_mouse[nr_point] = true;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     number = atoi(m_str.c_str());
-    m_str = argv[3];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     length = atof(m_str.c_str());
-    m_str = argv[4];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     red = atof(m_str.c_str());
-    m_str = argv[5];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     green = atof(m_str.c_str());
-    m_str = argv[6];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     blue = atof(m_str.c_str());
-    m_str = argv[7];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;;
     lifetime = atof(m_str.c_str());
-    m_str = argv[8];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     speed = atof(m_str.c_str());
-    m_str = argv[9];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     size = atof(m_str.c_str());
-    m_str = argv[10];
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     if (m_str == "random")
-        m_RndClr = true;
-    else if (m_str == "colortrans")
-        m_TrClr = true;
-    if (m_TrClr) {
-    m_str = argv[11];
-    tr_red = (char)atoi(m_str.c_str());
-    m_str = argv[12];
-    tr_green = (char)atoi(m_str.c_str());
-    m_str = argv[13];
-    tr_blue = (char)atoi(m_str.c_str());
-    m_str = argv[14];
+        m_RndClr_mouse = true;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
     if (m_str == "accel")
-        m_mouse_accel = true;
+        m_point_accel = true;
     else if (m_str == "decel")
-        m_mouse_decel = true;
-    }
-    else {
-        m_str = argv[11];
-    if (m_str == "accel")
-        m_mouse_accel = true;
-    else if (m_str == "decel")
-        m_mouse_decel = true;
-    }
+        m_point_decel = true;
+        file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    del_time = atof(m_str.c_str());
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    dur_time = atof(m_str.c_str());
+    file>>m_str;
+    file>>m_str;
+    file>>m_str;
+    texfile[nr_point] = (char*)m_str.c_str();
+    evfile[nr_point] = m_str;
+    mouse_n[nr_point].setParticle(number, length, red, green, blue, lifetime, speed, size, del_time, dur_time);
+    nr_point++;
 
-
+ }   file.close();
+    }
     glutInit(&argc, argv);
     glutInitWindowSize(800, 600);
     glutInitWindowPosition(0, 0);
-    glutCreateWindow("Particle System");
+    glutCreateWindow("Particle System");    
+
     glutInitDisplayMode(GLUT_RGBA | GLUT_SINGLE);
     glEnable( GL_DEPTH_TEST );
+    glEnable (GL_BLEND); 
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
+
     glPointSize(size);
     glutReshapeFunc( resizeWindow );
-    mouse_n.setParticle(number, length, red, green, blue, lifetime, speed, size);
     glutPassiveMotionFunc(setmouseMovement);
     glutDisplayFunc(MyDisplay_point_n);   
     glutIdleFunc(MyDisplay_point_n);
-
     glutMainLoop();
-
-    
-    }
 
 return 0;
 }

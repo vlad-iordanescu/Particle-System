@@ -1,0 +1,15 @@
+MovementType = random_rain
+Number = 200
+Coordonates = 100 100 900 600
+RedColor = 0
+GreenColor = 0
+BlueColor = 255
+Lifetime = 300
+Speed = 0.8
+Size = 10
+ColorEffect = Null
+SpeedEffect = accel
+Filter = Null
+Delay = 0
+Duration = 10
+Texture = Fire2.png

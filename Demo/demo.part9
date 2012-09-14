@@ -1,0 +1,15 @@
+MovementType = liniar
+Number = 200
+Coordonates = 250 600 250 800
+RedColor = 0
+GreenColor = 255
+BlueColor = 255
+Lifetime = 300
+Speed = 0.1
+Size = 1
+ColorEffect = Null
+SpeedEffect = accel
+Filter = Null
+Delay = 8
+Duration = 32
+Texture = Null

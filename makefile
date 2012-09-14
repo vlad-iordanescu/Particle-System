@@ -5,7 +5,7 @@ PROGRAM = Particle
  
 
 build:
-	$(CC) -o $(PROGRAM) $(SRC) point.cc liniar.cc global.cc mouse.cc $(CCFLAGS) -lGL -lGLU -lglut -lm
+	$(CC) -o $(PROGRAM) $(SRC) point.cc liniar.cc global.cc mouse.cc $(CCFLAGS) -lGL -lGLU -lglut -lm `libpng-config --ldflags`
  
 run:
 	./$(PROGRAM)

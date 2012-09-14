@@ -1,0 +1,15 @@
+MovementType = point_r
+Number = 20000
+Coordonates = 800 800
+RedColor = 0
+GreenColor = 0
+BlueColor = 255
+Lifetime = 300
+Speed = 0.1
+Size = 10
+ColorEffect = Null
+SpeedEffect = accel
+Filter = 10
+Delay = 13
+Duration = 5
+Texture = color.png

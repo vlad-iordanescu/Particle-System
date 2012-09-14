@@ -1,0 +1,15 @@
+MovementType = random_rain
+Number = 80000
+Coordonates = 400 100 600 500
+RedColor = 255
+GreenColor = 0
+BlueColor = 0
+Lifetime = 300
+Speed = 0.1
+Size = 1
+ColorEffect = Null
+SpeedEffect = accel
+Filter = Null
+Delay = 0
+Duration = 32
+Texture = Null

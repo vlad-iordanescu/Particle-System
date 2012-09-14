@@ -4,11 +4,12 @@
 #include <math.h>
 
 
+
 point::point() { }
  
 point::~point() { }
 
-int point::setParticle(int number, float x, float y, float red, float green, float blue, float lifetime, float speed, float size) {
+int point::setParticle(int number, float x, float y, float red, float green, float blue, float lifetime, float speed, float size, float time1, float time2) {
     m_particles = new particles[number];
     m_count = number;
     m_xstart = x;
@@ -28,6 +29,10 @@ int point::setParticle(int number, float x, float y, float red, float green, flo
         m_particles[i].m_ypos = m_ystart;
     }
     m_start = 1;
+    bf_time = time1;
+    af_time = time2;
+
+    time (&start);
     return 0;
 }
 
@@ -203,15 +208,29 @@ int point::setTransitionColor(char red, char green, char blue) {
 
 int point::setAccel() {
     for (int i = 0; i < m_count; i++) {
-        m_particles[i].m_speed += 0.000001;
+        m_particles[i].m_speed += 0.00001;
     }
     return 0;
 }
 
 int point::setDecel() {
     for (int i = 0; i < m_count; i++) {
-        m_particles[i].m_speed -= 0.000001;
+        m_particles[i].m_speed -= 0.00001;
     }
     return 0;
 }
 
+int point::setDelay() {
+      time (&end);
+      if (difftime (end,start) >= bf_time)
+          return 1;
+      else 
+          return 0;
+}
+int point::setDuration() {
+      time (&end);
+      if (difftime (end,start) - bf_time <= af_time)
+          return 1;
+      else 
+          return 0;
+}

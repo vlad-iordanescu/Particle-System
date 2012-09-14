@@ -1,0 +1,15 @@
+MovementType = random
+Number = 20000
+Coordonates = 400 400 600 600
+RedColor = 0
+GreenColor = 0
+BlueColor = 255
+Lifetime = 300
+Speed = 0.1
+Size = 10
+ColorEffect = Null
+SpeedEffect = accel
+Filter = 10
+Delay = 17
+Duration = 4
+Texture = smoke.png

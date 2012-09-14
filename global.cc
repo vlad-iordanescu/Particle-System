@@ -1,12 +1,12 @@
 #include "global.h"
 #include <stdlib.h>
-#include <time.h>
+
 
 global::global() { }
 
 global::~global() { }
 
-int global::setParticle(int number, float x1, float y1, float x2, float y2, float red, float green, float blue, float lifetime, float speed, float size) {
+int global::setParticle(int number, float x1, float y1, float x2, float y2, float red, float green, float blue, float lifetime, float speed, float size, float time1, float time2) {
     srand (time(NULL));
     m_particles_r = new particles[number];
     m_count = number;
@@ -30,6 +30,9 @@ int global::setParticle(int number, float x1, float y1, float x2, float y2, floa
         m_particles_r[i].m_xpos = (rand() % (int)(m_xfin - m_xstart)) + (int)m_xstart;
         m_particles_r[i].m_ypos = (rand() % (int)(m_yfin - m_ystart)) + (int)m_ystart;
     }
+    bf_time = time1;
+    af_time = time2;
+    time (&start);
     return 0;
 }
 
@@ -136,14 +139,29 @@ int global::setTransitionColor(char red, char green, char blue) {
 
 int global::setAccel() {
     for (int i = 0; i < m_count; i++) {
-        m_particles_r[i].m_speed += 0.000001;
+        m_particles_r[i].m_speed += 0.00001;
     }
     return 0;
 }
 
 int global::setDecel() {
     for (int i = 0; i < m_count; i++) {
-        m_particles_r[i].m_speed -= 0.000001;
+        m_particles_r[i].m_speed -= 0.00001;
     }
     return 0;
+}
+
+int global::setDelay() {
+      time (&end);
+      if (difftime (end,start) >= bf_time)
+          return 1;
+      else 
+          return 0;
+}
+int global::setDuration() {
+      time (&end);
+      if (difftime (end,start) - bf_time <= af_time)
+          return 1;
+      else 
+          return 0;
 }

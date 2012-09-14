@@ -1,57 +1,49 @@
 The basic command line for the program is this:
 
-For point movement:
-===================
+Basic properties file:
+======================
 
-./Particle (type of point movement) (number of particles) (start point x coord) (start point y coord) (color red) (color green) (color blue) (lifetime) (speed) (size) (color transition and next color) (speed effect) (length if necessary)
+MovementType = the type of movement the particles will have
+Number = the number of particles generated
+Coordonates = the coordonates for each type of movement
+RedColor = red color intensity (0-255)
+GreenColor = green color intensity (0-255)
+BlueColor = blue color intensity (0-255)
+Lifetime = the distance a particle will travel before it is destroyed
+Speed = the speed of the particles
+Size = the size of the particles
+ColorEffect = the color effect
+SpeedEffect = the speed effect
+Filter = special filter for some particle movements
+Delay = the delay before the particle starts (seconds)
+Duration = the duration of the particle (seconds)
+Texture = the texture of the particle
 
-Ex.
-
-./Particle point 1000 10 10 255 255 255 100 0.5 0.1 NULL NULL
-./Particle point_r 1000 25 25 0 0 0 1000 0.3 0.2 colortrans 255 255 255 accel 10
 
 Color transition:
-
 -NULL for no color transition
 -"random" for random color transition
--"colortrans" and 3 numbers for specific color transition
 
 Speed effect:
+-NULL for no effect
 -"accel" for acceleration
 -"decel" for deceleration
 
-Length is for point_r and point_rd (ripple effect and ripple effect with reversion)
+Filter is for point_r and point_rd (ripple effect and ripple effect with reversion) = the size of the line
 
-Types of movement: point, point_r, point_rd
+Types of movement: point, point_r, point_rd, liniar, random, random_rain, random_blk, mouse
 
-For liniar movement:
-====================
+Texture = add any .png image to create a texture
 
-./Particle liniar (type of point movement) (number of particles) (first x coord) (first y coord) (second x coord)...etc (color red) (color green) (color blue) (lifetime) (speed) (size) (color transition and next color) (speed effect)
+Important
+=========
+Because of the opengl buffer, the program can't have both simple particles and textured particles at the same time.
 
-You can assign an indefinite number of coordonates for a specific trajectory.
-The rest is like in the point movement
+Demo
+====
+./Particle demo.part1 demo.part2 demo.part3 demo.part4 demo.part5 demo.part6 demo.part7 demo.part8 demo.part9 demo.part10 demo.part11 demo.part12 demo.part13 demo.part14 demo.part15 demo.part16 demo.part17 demo.part18 demo.part19 demo.part20 demo.part21 demo.part22 demo.part23 demo.part24 demo.part25 demo.part26 demo.part27 demo.part28 demo.part29
 
-For global movement:
-====================
-./Particle liniar (type of point movement) (number of particles) (first x coord) (first y coord) (second x coord) (second y coord) (color red) (color green) (color blue) (lifetime) (speed) (size) (color transition and next color) (speed effect)
+./Particle demo.part1 demo.part2 demo.part3 demo.part4 demo.part5 demo.part6 demo.part7
 
-The coordonates are to point that are diagonal opposed corners for a rectangle
-The first coordonates are the lower point.
-
-Types of movement: random, random_blk, random_rain
-
-
-DEMO
-=====
-
-./Particle mouse 200000 50 0 0 255 100 0.05 0.01 NULL accel
-./Particle mouse 200000 100 0 255 0 100 0.005 1 NULL accel
-./Particle random_rain 2000 100 200 800 900 255 0 0 900 0.2 2 NULL NULL
-./Particle liniar 10000 600 200 300 400 800 800 100 300 900 500 100 100 255 0 0 400 0.005 3 NULL NULL
-./Particle point_rd 200000 500 500 0 255 0 400 0.05 1 NULL NULL 4
-./Particle point_r 200000 500 500 255 0 0 400 0.05 1 NULL NULL 4
-./Particle point 200000 500 500 0 255 0 400 0.5 1 NULL NULL
-./Particle random 100000 200 200 800 800 0 255 0 400 0.5 0.5 NULL NULL
 
 
