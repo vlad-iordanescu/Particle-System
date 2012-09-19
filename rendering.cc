@@ -2,9 +2,7 @@
 #include "mouse.h"
 using namespace std;
 #include<fstream>
-#include<GL/glut.h>
-#include<GL/gl.h>
-#include<GL/glu.h>
+#include "graphix.h"
 #include<png.h>
 #include <cstdio>
 #include <string.h>
