@@ -1,10 +1,11 @@
-#include<iostream>
+#include <iostream>
 #include "mouse.h"
 using namespace std;
-#include<fstream>
+#include <fstream>
 #include "graphix.h"
-#include<png.h>
+#include <png.h>
 #include <cstdio>
+#include <cstdlib>
 #include <string.h>
 
 bool m_RndClr_point = false;
@@ -48,6 +49,7 @@ int fpsnr=0;
 	    png_structp png_ptr;
 	    png_infop info_ptr;
 	    unsigned int sig_read = 0;
+		int png_color_type = 0;
 	    if ((fp = fopen(name, "rb")) == NULL)
   return false;
 
@@ -80,10 +82,10 @@ int fpsnr=0;
 	 
 
 	    png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING | PNG_TRANSFORM_EXPAND, NULL);
-	 
-	    outWidth = info_ptr->width;
-	    outHeight = info_ptr->height;
-	    switch (info_ptr->color_type) {
+		int bit_depth;
+	    png_get_IHDR(png_ptr, info_ptr, (unsigned int*)&outWidth, (unsigned int*)&outHeight, &bit_depth, &png_color_type, NULL, NULL, NULL);
+		
+	    switch (png_color_type) {
 	        case PNG_COLOR_TYPE_RGBA:
 	            outHasAlpha = true;
 	            break;
