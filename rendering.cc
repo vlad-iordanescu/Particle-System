@@ -62,13 +62,13 @@ int fpsnr=0;
 	    info_ptr = png_create_info_struct(png_ptr);
 	    if (info_ptr == NULL) {
 	        fclose(fp);
-	        png_destroy_read_struct(&png_ptr, png_infopp_NULL, png_infopp_NULL);
+	        png_destroy_read_struct(&png_ptr, NULL, NULL);
 	        return false;
 	    }
 
 	    if (setjmp(png_jmpbuf(png_ptr))) {
 
-	        png_destroy_read_struct(&png_ptr, &info_ptr, png_infopp_NULL);
+	        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 	        fclose(fp);
 
 	        return false;
@@ -79,7 +79,7 @@ int fpsnr=0;
 	    png_set_sig_bytes(png_ptr, sig_read);
 	 
 
-	    png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING | PNG_TRANSFORM_EXPAND, png_voidp_NULL);
+	    png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING | PNG_TRANSFORM_EXPAND, NULL);
 	 
 	    outWidth = info_ptr->width;
 	    outHeight = info_ptr->height;
@@ -106,7 +106,7 @@ int fpsnr=0;
 	        memcpy(*outData+(row_bytes * (outHeight-1-i)), row_pointers[i], row_bytes);
 	    }
 
-	    png_destroy_read_struct(&png_ptr, &info_ptr, png_infopp_NULL);
+	    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 	fclose(fp);
 	    return true;
 	}
