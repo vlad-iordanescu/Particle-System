@@ -1,8 +1,7 @@
 #include "mouse.h"
 #include <stdlib.h>
 #include <time.h>
-#include <GL/gl.h>
-#include <GL/glut.h>
+#include "graphix.h"
 
 mouse::mouse() { }
 
